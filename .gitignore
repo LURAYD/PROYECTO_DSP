@@ -1,5 +1,8 @@
-# Ignorar entorno virtual
-venv/
+# Ignorar entorno virtual llamado DSP
+DSP/
+
+# Ignorar archivos de video
+*.mp4
 
 # Ignorar cachés de Python
 __pycache__/
