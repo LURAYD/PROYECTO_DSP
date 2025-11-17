@@ -14,14 +14,15 @@ sobel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
 sobel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
 # Ya definimos las matrices a usar.
 #Ahora las colas
-q1 = Queue(maxsize=20)  # Cambiar a grises
-q2 = Queue(maxsize=20)  # Gauss
-q3 = Queue(maxsize=20)  # SObel
-q_yolo = Queue(maxsize=20)  # Imagen lista para YOLO (BGR)
+q1 = Queue(maxsize=200)  # Cambiar a grises
+q2 = Queue(maxsize=200)  # Gauss
+q3 = Queue(maxsize=200)  # SObel
+q4 = Queue(maxsize=200)  # Salida del sobel, entrada a convertir_a_BGR
 
+q_yolo = Queue(maxsize=200)  # Imagen lista para YOLO (BGR)
 
-def datosin ():
-    video = cv2.VideoCapture('video_4h.mp4')  #segun internet uso 0 para la camara.
+def datosin (q1):
+    video = cv2.VideoCapture('videoplayback.mp4')  #segun internet uso 0 para la camara.
     if not video.isOpened():
         print("No se pudo abrir el video.")
         return
@@ -34,7 +35,7 @@ def datosin ():
     video.release() #cierro el video
     q1.put(None)  # Indicar el fin de los datos(ESTO ME LO RECOMENDO AQUI MISMO XD, INCLUSO ME DICE QUE RECOMEINDA CHATGT ESTA IA ES UN CASO)
 
-def grayscale():
+def grayscale(q1,q2):
     while True:
         frame = q1.get()
         if frame is None:
@@ -48,7 +49,7 @@ def grayscale():
 
         q2.put(gris)
 
-def gauss():
+def gauss(q2,q3):
     while True:
         gris = q2.get()
         if gris is None:
@@ -59,67 +60,59 @@ def gauss():
 
         q3.put(filtrado)
 
-def sobel():
+def sobel(q3, q4):
     contador = 0
-    tiempo_inicio = time.time() 
+    tiempo_inicio = time.time()
 
     while True:
         entrada = q3.get()
         if entrada is None:
+            q4.put(None)  # Propaga fin a siguiente etapa
             break
-        #Ahora usamos las 2 matrices para calcular la gradicente mediante el proceso de convolucion 
+
         dx = cv2.filter2D(entrada, cv2.CV_32F, sobel_x)
         dy = cv2.filter2D(entrada, cv2.CV_32F, sobel_y)
-        #Calculo de la magnitud del gradiente
         magnitud = cv2.magnitude(dx, dy)
         salida = cv2.convertScaleAbs(magnitud)
-        contador += 1 
-        tiempo_actual = time.time()
-        fps = contador / (tiempo_actual - tiempo_inicio)
+        
+        q4.put(salida)  # Enviar a siguiente etapa
 
+        # Mostrar (solo si querés visualizar para pruebas)
         cv2.imshow("DSP Pipeline Output", salida)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-  
-def convertir_a_BGR():
+
+        contador += 1
+        tiempo_actual = time.time()
+        fps = contador / (tiempo_actual - tiempo_inicio)
+
+    print(f"Frames procesados: {contador}")
+    print(f"Tiempo total: {tiempo_actual - tiempo_inicio:.2f}s")
+    print(f"FPS promedio: {fps:.2f}")
+    
+    cv2.destroyWindow("DSP Pipeline Output")  # ✅ Cierra solo esa ventana correctamente
+
+    
+def convertir_a_BGR(q4, q_yolo):
     while True:
-        entrada = q3.get()
+        entrada = q4.get()
         if entrada is None:
-            q_yolo.put(None)  # Señal de fin
+            q_yolo.put(None)
             break
-        # Ya que 'entrada' es salida del filtro Gauss, hacemos Sobel como antes:
-        dx = cv2.filter2D(entrada, cv2.CV_32F, sobel_x)
-        dy = cv2.filter2D(entrada, cv2.CV_32F, sobel_y)
-        magnitud = cv2.magnitude(dx, dy)
-        salida = cv2.convertScaleAbs(magnitud)
-
-        # 🔁 Conversión a BGR (3 canales)
-        salida_bgr = cv2.cvtColor(salida, cv2.COLOR_GRAY2BGR)
-
-        # Enviar imagen procesada (lista para YOLO)
+        salida_bgr = cv2.cvtColor(entrada, cv2.COLOR_GRAY2BGR)
         q_yolo.put(salida_bgr)
 
-  
-    print(f"Frames procesados: {contador}") 
-    print(f"Tiempo total: {tiempo_actual - tiempo_inicio:.2f}s") 
-    print(f"FPS promedio: {fps:.2f}") 
-    cv2.destroyAllWindows()
+#def convertir_a_BGR(q3,q_yolo):
+ #   while True:
+  #      entrada = q3.get()
+   #     if entrada is None:
+    #        q_yolo.put(None)  # Señal de fin
+     #       break
+        # Ya que 'entrada' es salida del filtro Gauss, hacemos Sobel como antes:
+      #  dx = cv2.filter2D(entrada, cv2.CV_32F, sobel_x)
+       # dy = cv2.filter2D(entrada, cv2.CV_32F, sobel_y)
+        #magnitud = cv2.magnitude(dx, dy)
+        #salida = cv2.convertScaleAbs(magnitud)
 
-# Ahora creamos los hilos
-hilo_datosin = threading.Thread(target=datosin)     
-hilo_grayscale = threading.Thread(target=grayscale)
-hilo_gauss = threading.Thread(target=gauss)
-hilo_sobel = threading.Thread(target=sobel)
-# Iniciamos los hilos
-hilo_datosin.start()
-hilo_grayscale.start()
-hilo_gauss.start()
-hilo_sobel.start()
-
-try:
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    print("Interrumpido por usuario.")
-
-
+        # 🔁 Conversión a BGR (3 canales)
+        #salida_bgr = cv2.cvtColor(salida, cv2.COLOR_GRAY2BGR)
