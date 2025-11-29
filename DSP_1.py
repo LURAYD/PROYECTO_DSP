@@ -14,15 +14,15 @@ sobel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
 sobel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
 # Ya definimos las matrices a usar.
 #Ahora las colas
-q1 = Queue(maxsize=200)  # Cambiar a grises
-q2 = Queue(maxsize=200)  # Gauss
-q3 = Queue(maxsize=200)  # SObel
-q4 = Queue(maxsize=200)  # Salida del sobel, entrada a convertir_a_BGR
+q1 = Queue(maxsize=20)  # Cambiar a grises
+q2 = Queue(maxsize=20)  # Gauss
+q3 = Queue(maxsize=20)  # SObel
+q4 = Queue(maxsize=20)  # Salida del sobel, entrada a convertir_a_BGR
 
-q_yolo = Queue(maxsize=200)  # Imagen lista para YOLO (BGR)
+q_yolo = Queue(maxsize=20)  # Imagen lista para YOLO (BGR)
 
 def datosin (q1):
-    video = cv2.VideoCapture('videoplayback.mp4')  #segun internet uso 0 para la camara.
+    video = cv2.VideoCapture(0)  #segun internet uso 0 para la camara.
     if not video.isOpened():
         print("No se pudo abrir el video.")
         return
@@ -78,9 +78,9 @@ def sobel(q3, q4):
         q4.put(salida)  # Enviar a siguiente etapa
 
         # Mostrar (solo si querés visualizar para pruebas)
-        cv2.imshow("DSP Pipeline Output", salida)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        #cv2.imshow("DSP Pipeline Output", salida)
+        #if cv2.waitKey(1) & 0xFF == ord('q'):
+         #   break
 
         contador += 1
         tiempo_actual = time.time()
