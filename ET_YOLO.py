@@ -4,7 +4,7 @@ import time
 from ultralytics import YOLO
 
 def deteccion_yolo(q_entrada):
-    model = YOLO("yolov8s.pt")  # Carga el modelo YOLOv8
+    model = YOLO("yolov8n.pt")  # Carga el modelo YOLOv8
     contador = 0
     tiempo_inicio = time.time()
 

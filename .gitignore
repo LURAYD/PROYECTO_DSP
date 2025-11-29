@@ -1,9 +1,34 @@
-# Ignorar entorno virtual llamado DSP
+# Ignorar entorno virtual completo (DSP, venv, ENV)
 DSP/
+venv/
+ENV/
 
-# Ignorar archivos de video
-*.mp4
+# Ignorar librerías instaladas (site-packages)
+DSP/Lib/site-packages/
 
 # Ignorar cachés de Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Ignorar binarios y librerías compiladas
+*.dll
+*.so
+*.dylib
+
+# Ignorar archivos de video y multimedia
+*.mp4
+*.avi
+*.mov
+
+# Ignorar archivos temporales y logs
+*.log
+*.tmp
+
+# Ignorar configuraciones locales de IDE
+.vscode/
+.idea/
+
+# Evitar repositorios embebidos (como DSP_clean)
+*/.git
