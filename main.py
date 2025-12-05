@@ -3,36 +3,48 @@ import numpy as np
 import cv2
 from queue import Queue
 import time
+from DSP_1 import datosin, grayscale, gauss, sobel, convertir_a_BGR, modo_control,gamma_correct,ker_gaus
+from ET_YOLO import deteccion_yolo
+from visualizacion import visualizar_debug
+# Colas
+q1 = Queue(maxsize=10)
+q2 = Queue(maxsize=10)
+q3 = Queue(maxsize=10)
+q4 = Queue(maxsize=10)
+q_yolo = Queue(maxsize=10)
+q_debug = Queue(maxsize=2)
+# Función para cambiar modo desde consola
+def cambiar_modo():
+    while True:
+        nuevo_modo = input("Ingresa modo [Color / gris / gauss / sobel]: ").strip().lower()
+        if nuevo_modo in ["Color", "gris", "gauss", "sobel"]:
+            modo_control(nuevo_modo)
+            print(f"✅ Modo cambiado a: {nuevo_modo}")
+        else:
+            print("❌ Modo inválido. Usa: Color, gris, gauss, sobel")
 
-from DSP_1 import datosin, grayscale, gauss, sobel, convertir_a_BGR
-from ET_YOLO import deteccion_yolo  # Ya incluye Kalman y trayectoria
+# Hilos
+hilo0 = threading.Thread(target=visualizar_debug, args=(q_debug, ker_gaus), daemon=True)
 
-# Colas para el pipeline
-q1 = Queue(maxsize=10)      # Captura → gris
-q2 = Queue(maxsize=10)      # gris → gauss
-q3 = Queue(maxsize=10)      # gauss → sobel
-q4 = Queue(maxsize=10)      # sobel → BGR
-q_yolo = Queue(maxsize=10)  # imagen en BGR lista para YOLO
-
-# Hilos de procesamiento
 hilo1 = threading.Thread(target=datosin, args=(q1,))
 hilo2 = threading.Thread(target=grayscale, args=(q1, q2,))
-hilo3 = threading.Thread(target=gauss, args=(q2, q3,))
+hilo3 = threading.Thread(target=gauss, args=(q2, q3,q_debug,))
 hilo4 = threading.Thread(target=sobel, args=(q3, q4,))
 hilo5 = threading.Thread(target=convertir_a_BGR, args=(q4, q_yolo,))
+hilo6 = threading.Thread(target=deteccion_yolo, args=(q_yolo,))
+hilo7 = threading.Thread(target=modo_control)
 
-# detección y seguimiento con Kalman
-hilo6 = threading.Thread(target=deteccion_yolo, args=(q_yolo, None,))  # Segundo argumento no se usa, puede ser None
+# Lanzamiento
+hilo0.start()
 
-# Lanzamiento de hilos
 hilo1.start()
 hilo2.start()
 hilo3.start()
 hilo4.start()
 hilo5.start()
 hilo6.start()
+hilo7.start()
 
-# Mantener el programa vivo
 try:
     while True:
         time.sleep(1)

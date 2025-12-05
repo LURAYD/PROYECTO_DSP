@@ -1,9 +1,9 @@
 import subprocess
 import os
 
-video_entrada = "video1.mp4"
-video_salida = "video_4h.mp4"
-duracion_deseada_min = 240  # 4 horas
+video_entrada = "cruzando.mp4"
+video_salida = "cruzando_final.mp4"
+duracion_deseada_min = 50  # 4 horas
 
 # Detectar duración con ffprobe
 cmd = [
