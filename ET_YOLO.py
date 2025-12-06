@@ -63,7 +63,7 @@ def deteccion_yolo(q_entrada):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
             # Puntos de predicción futura
-            puntos_futuros = tracker.predecir_futuro(pasos=10)
+            puntos_futuros = tracker.predecir_futuro(pasos=15)
             for i in range(len(puntos_futuros)):
                 cv2.circle(v_entrada, puntos_futuros[i], 3, (255, 0, 0), -1)
                 if i > 0:
